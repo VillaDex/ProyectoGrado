@@ -5,19 +5,25 @@ RUN apt-get update && apt-get install -y \
     libzip-dev unzip git curl libpng-dev libonig-dev libxml2-dev zip \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
+# Habilita mod_rewrite de Apache
+RUN a2enmod rewrite
+
+# Establece el directorio de trabajo
+WORKDIR /var/www/html
+
+# Copia los archivos del proyecto
+COPY . /var/www/html
+
+# Cambia el DocumentRoot de Apache a la carpeta "public"
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+
+# Da permisos adecuados
+RUN chown -R www-data:www-data /var/www/html
+
 # Instala Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copia archivos del proyecto
-COPY . /var/www/html
-
-WORKDIR /var/www/html
-
-# Da permisos adecuados
-RUN chown -R www-data:www-data /var/www/html \
-    && a2enmod rewrite
-
-# Instala dependencias Laravel
+# Instala dependencias de Laravel
 RUN composer install --no-dev --optimize-autoloader
 
 # Expone el puerto 80
