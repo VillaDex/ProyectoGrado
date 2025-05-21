@@ -5,23 +5,15 @@ services:
     plan: free
     branch: main
     dockerfilePath: ./Dockerfile
-    buildFilter:
-      paths:
-        - Dockerfile
-        - render.yaml
-        - .env
-        - composer.json
     envVars:
       - key: APP_ENV
-        value: base64:zammRuLZejPFs//T6W/ti9MSzMavEkyUq4jzO3DFVg8=
+        value: production
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        value: base64:PEGA_AQUI_TU_APP_KEY
+        value: base64:zammRuLZejPFs//T6W/ti9MSzMavEkyUq4jzO3DFVg8=
       - key: APP_URL
         value: https://laravel-app.onrender.com
-
-      # Configuración MySQL - Railway
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
