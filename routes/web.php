@@ -32,7 +32,6 @@ Route::post('/password/reset', [PasswordResetController::class, 'reset'])->name(
 // Términos y condiciones
 Route::get('/terminos-y-condiciones', fn() => view('auth.tyc'));
 
-
 // RUTAS AUTENTICADAS GENERALES
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -49,7 +48,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
 });
 
-
 // RUTAS PARA REPORTES (según rol)
 Route::middleware(['auth', 'role:superadmin|funcionario-compra|funcionario-venta'])->prefix('reportes')->group(function () {
     Route::get('/', [ReporteController::class, 'index'])->name('reportes.index');
@@ -63,7 +61,6 @@ Route::middleware(['auth', 'role:superadmin|funcionario-compra|funcionario-venta
     Route::get('compras/descargar', [ReporteController::class, 'descargarCompras'])->name('reportes.compras.descargar');
 });
 
-
 // RUTAS PARA SUPERADMIN
 Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::resources([
@@ -74,35 +71,35 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
         'users' => UserController::class,
     ]);
 
-    // CRUD completo de productos
-    Route::resource('productos', ProductoController::class)->except(['index', 'show']);
+    // CRUD completo de productos (excepto index y show que ya están en general)
+    Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
+    Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
+    Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
+    Route::put('/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 
     // Gestión de roles
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     Route::post('/assign-role/{user}', [RoleController::class, 'assignRole'])->name('assign.role');
 });
 
-
 // RUTAS PARA FUNCIONARIO-COMPRA
 Route::middleware(['auth', 'role:funcionario-compra'])->group(function () {
-    Route::resource('compras', CompraController::class);
-    Route::resource('proveedores', ProveedorController::class);
+    Route::resource('compras', CompraController::class)->except(['show']);
+    Route::resource('proveedores', ProveedorController::class)->except(['show']);
 
-    // Permisos parciales de productos
+    // Permisos parciales de productos (sin duplicar)
     Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
     Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
     Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
     Route::put('/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 });
-
 
 // RUTAS PARA FUNCIONARIO-VENTA
 Route::middleware(['auth', 'role:funcionario-venta'])->group(function () {
-    Route::resource('ventas', VentaController::class);
-    Route::resource('clientes', ClienteController::class);
+    Route::resource('ventas', VentaController::class)->except(['show']);
+    Route::resource('clientes', ClienteController::class)->except(['show']);
 });
-
 
 // RUTAS PARA FUNCIONARIO-NORMAL
 Route::middleware(['auth', 'role:funcionario-normal'])->group(function () {
