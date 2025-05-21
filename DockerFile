@@ -1,0 +1,24 @@
+FROM php:8.2-apache
+
+# Instala extensiones necesarias
+RUN apt-get update && apt-get install -y \
+    libzip-dev unzip git curl libpng-dev libonig-dev libxml2-dev zip \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+
+# Instala Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copia archivos del proyecto
+COPY . /var/www/html
+
+WORKDIR /var/www/html
+
+# Da permisos adecuados
+RUN chown -R www-data:www-data /var/www/html \
+    && a2enmod rewrite
+
+# Instala dependencias Laravel
+RUN composer install --no-dev --optimize-autoloader
+
+# Expone el puerto 80
+EXPOSE 80
