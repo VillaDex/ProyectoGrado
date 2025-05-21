@@ -26,11 +26,13 @@ services:
         value: root
       - key: DB_PASSWORD
         value: OVeNJGaEMfPCgMDfEHqUMpDXMTvlygNE
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan optimize:clear
     deploy:
       postDeployCommand: |
         php artisan migrate --force
         php artisan db:seed --class=RolesTableSeeder --force
         php artisan db:seed --class=AssignSuperadminRole --force
-        php artisan cache:clear
-        php artisan view:clear
-        php artisan config:cache
+        php artisan storage:link
+        php artisan optimize

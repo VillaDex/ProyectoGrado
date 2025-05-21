@@ -11,20 +11,23 @@ RUN a2enmod rewrite
 # Establece el directorio de trabajo
 WORKDIR /var/www/html
 
-# Copia los archivos del proyecto
-COPY . /var/www/html
+# Copia solo lo necesario para instalar dependencias
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Cambia el DocumentRoot de Apache a la carpeta "public"
+# Copia el resto de los archivos
+COPY . .
+
+# Cambia el DocumentRoot de Apache
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
-# Da permisos adecuados
-RUN chown -R www-data:www-data /var/www/html
+# Permisos y optimización
+RUN chown -R www-data:www-data /var/www/html \
+    && php artisan optimize:clear \
+    && php artisan optimize
 
-# Instala Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Instala dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader
-
-# Expone el puerto 80
+# Puerto de exposición
 EXPOSE 80
+
+# Comando de inicio con migraciones y seeders
+CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
