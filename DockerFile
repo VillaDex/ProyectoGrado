@@ -1,33 +1,41 @@
 FROM php:8.2-apache
 
-# Instala extensiones necesarias
+# 1. Instala dependencias del sistema y extensiones PHP
 RUN apt-get update && apt-get install -y \
     libzip-dev unzip git curl libpng-dev libonig-dev libxml2-dev zip \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# Habilita mod_rewrite de Apache
+# 2. Instala Composer globalmente
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# 3. Habilita mod_rewrite de Apache
 RUN a2enmod rewrite
 
-# Establece el directorio de trabajo
+# 4. Establece el directorio de trabajo
 WORKDIR /var/www/html
 
-# Copia solo lo necesario para instalar dependencias
+# 5. Copia solo los archivos necesarios para composer (optimización de caché Docker)
 COPY composer.json composer.lock ./
+
+# 6. Instala dependencias de Composer (sin scripts de post-instalación)
 RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Copia el resto de los archivos
+# 7. Copia el resto de los archivos del proyecto
 COPY . .
 
-# Cambia el DocumentRoot de Apache
+# 8. Configura Apache
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
-# Permisos y optimización
-RUN chown -R www-data:www-data /var/www/html \
-    && php artisan optimize:clear \
+# 9. Establece permisos adecuados
+RUN chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache
+
+# 10. Optimización de Laravel
+RUN php artisan optimize:clear \
     && php artisan optimize
 
-# Puerto de exposición
+# 11. Puerto de exposición
 EXPOSE 80
 
-# Comando de inicio con migraciones y seeders
+# 12. Comando de inicio con migraciones y seeders
 CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
