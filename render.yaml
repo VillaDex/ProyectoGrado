@@ -29,6 +29,8 @@ services:
     deploy:
       postDeployCommand: |
         php artisan migrate --force
-        php artisan db:seed --class=RolesTableSeeder --force &&
-        php artisan db:seed --class=AssignSuperadminRole --force &&
-        php artisan optimize
+        php artisan db:seed --class=RolesTableSeeder --force
+        php artisan db:seed --class=AssignSuperadminRole --force
+        php artisan cache:clear
+        php artisan view:clear
+        php artisan config:cache
