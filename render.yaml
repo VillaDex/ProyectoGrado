@@ -9,30 +9,27 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: false  # Cambiar a true solo para desarrollo
       - key: APP_KEY
         value: base64:zammRuLZejPFs//T6W/ti9MSzMavEkyUq4jzO3DFVg8=
       - key: APP_URL
-        value: https://laravel-app.onrender.com
+        value: https://proyectogrado-1.onrender.com
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        value: mysql.railway.internal
+        value: mysql.railway.internal  # Usar esta en lugar de yamanote.proxy.rlwy.net
       - key: DB_PORT
-        value: 3306
+        value: 3306  # Usar este puerto interno
       - key: DB_DATABASE
         value: railway
       - key: DB_USERNAME
         value: root
       - key: DB_PASSWORD
         value: OVeNJGaEMfPCgMDfEHqUMpDXMTvlygNE
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan optimize:clear
     deploy:
       postDeployCommand: |
+        sleep 15  # Esperar a que la DB esté lista
         php artisan migrate --force
         php artisan db:seed --class=RolesTableSeeder --force
         php artisan db:seed --class=AssignSuperadminRole --force
-        php artisan storage:link
         php artisan optimize
