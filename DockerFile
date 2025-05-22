@@ -1,27 +1,28 @@
 FROM php:8.2-apache
 
-# Instala dependencias
+# 1. Instala dependencias esenciales
 RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl libpng-dev libonig-dev libxml2-dev zip \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+    libzip-dev unzip libpng-dev \
+    && docker-php-ext-install pdo_mysql zip gd
 
-# Instala Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Configura Apache
+# 2. Configura Apache
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite
-WORKDIR /var/www/html
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Copia archivos e instala dependencias
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --optimize-autoloader
+# 3. Instala Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 4. Copia TODO el código primero
+WORKDIR /var/www/html
 COPY . .
 
-# Configuración de Apache y permisos
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf \
-    && chown -R www-data:www-data /var/www/html/storage \
-    && chown -R www-data:www-data /var/www/html/bootstrap/cache
+# 5. Instala dependencias de Composer
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# Puerto y comando de inicio
+# 6. Configura permisos
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 storage bootstrap/cache
+
 EXPOSE 80
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
+CMD ["apache2-foreground"]
