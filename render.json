@@ -1,15 +1,15 @@
 {
   "headers": [
     {
-      "source": "/css/(.*)",
+      "source": "/css/(.*.css)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=604800"
-        },
         {
           "key": "Content-Type",
           "value": "text/css"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
         }
       ]
     }
