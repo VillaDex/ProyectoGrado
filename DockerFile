@@ -1,28 +1,38 @@
 FROM php:8.2-apache
 
-# 1. Instala dependencias esenciales
+# Instala dependencias necesarias y extensiones PHP
 RUN apt-get update && apt-get install -y \
-    libzip-dev unzip libpng-dev \
+    libzip-dev unzip libpng-dev libjpeg-dev \
+    && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install pdo_mysql zip gd
 
-# 2. Configura Apache
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
-RUN a2enmod rewrite
+# Habilita mod_rewrite y mod_headers
+RUN a2enmod rewrite headers
+
+# Establece ServerName para evitar warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# 3. Instala Composer
+# Configuración de Apache (asegúrate que AllowOverride esté en All)
+COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+
+# Copia Composer desde la imagen oficial
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 4. Copia TODO el código primero
+# Define directorio de trabajo
 WORKDIR /var/www/html
+
+# Copia TODOS los archivos primero (incluyendo artisan)
 COPY . .
 
-# 5. Instala dependencias de Composer
+# Instala dependencias
 RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# 6. Configura permisos
+# Ajusta permisos
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 storage bootstrap/cache
 
+# Exponemos el puerto 80
 EXPOSE 80
+
+# Comando para arrancar Apache en primer plano
 CMD ["apache2-foreground"]

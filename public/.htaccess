@@ -23,9 +23,12 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
 
+# Configuraciones de cabeceras (fuera del bloque mod_rewrite)
+<IfModule mod_headers.c>
     # Cache para archivos estáticos
-    <FilesMatch ".(css|js|jpg|png)$">
+    <FilesMatch "\.(css|js|jpg|png)$">
         Header set Cache-Control "max-age=604800, public"
     </FilesMatch>
 </IfModule>
