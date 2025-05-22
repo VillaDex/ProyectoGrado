@@ -5,21 +5,84 @@
 
     RewriteEngine On
 
+    # ========================================
+    # 1. Configuración para archivos estáticos
+    # ========================================
+    
+    # Sirve archivos estáticos directamente (CSS, JS, imágenes)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|svg|webp|woff|woff2|ico)$ [NC]
+    RewriteRule ^ - [L]
+
+    # ========================================
+    # 2. Configuración de seguridad y caché
+    # ========================================
+    
+    <IfModule mod_headers.c>
+        # Cabeceras de seguridad
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-Frame-Options "SAMEORIGIN"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Cache para archivos estáticos (1 semana)
+        <FilesMatch "\.(css|js|jpg|jpeg|png|gif|svg|webp|woff|woff2|ico)$">
+            Header set Cache-Control "max-age=604800, public, must-revalidate"
+        </FilesMatch>
+    </IfModule>
+
+    <IfModule mod_mime.c>
+        AddType text/css .css
+        AddType application/javascript .js
+    </IfModule>
+
+    # ========================================
+    # 3. Redirecciones y reglas principales
+    # ========================================
+    
     # Redirección HTTPS solo si no estamos en Render
     RewriteCond %{HTTP_HOST} !\.onrender\.com$ [NC]
     RewriteCond %{ENV:APP_ENV} production
     RewriteCond %{HTTPS} !=on
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Resto de tus reglas actuales...
+    # Manejo de autorización HTTP
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # Eliminar slash final de las URLs
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Front Controller: Redirigir todo a index.php
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
+    # ========================================
+    # 4. Configuración adicional recomendada
+    # ========================================
+    
+    # Deshabilitar el listado de directorios
+    Options -Indexes
+
+    # Proteger archivos sensibles
+    <FilesMatch "(\.env|\.gitignore|composer\.json|composer\.lock|\.htaccess)">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# ========================================
+# 5. Configuración específica para Render
+# ========================================
+
+# Comprimir archivos estáticos
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css text/javascript application/javascript
+</IfModule>
+
+# Configurar tipos MIME para archivos modernos
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType font/woff2 .woff2
 </IfModule>

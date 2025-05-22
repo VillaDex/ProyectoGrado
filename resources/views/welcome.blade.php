@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Después tu CSS con versión para cache -->
-    <link rel="stylesheet" href="{{ asset('css/welcome.css') }}?v=2.1">
+    <link rel="stylesheet" href="{{ asset('css/welcome.css') }}?v=<?= time() ?>">
     <style>
         :root {
             --primary-color: #4f46e5;
