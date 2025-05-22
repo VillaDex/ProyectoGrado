@@ -5,30 +5,21 @@
 
     RewriteEngine On
 
-    # Redirección HTTPS en producción
+    # Redirección HTTPS solo si no estamos en Render
+    RewriteCond %{HTTP_HOST} !\.onrender\.com$ [NC]
     RewriteCond %{ENV:APP_ENV} production
     RewriteCond %{HTTPS} !=on
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Manejo de autorización
+    # Resto de tus reglas actuales...
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirección de trailing slashes
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Front Controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-</IfModule>
-
-# Configuraciones de cabeceras (fuera del bloque mod_rewrite)
-<IfModule mod_headers.c>
-    # Cache para archivos estáticos
-    <FilesMatch "\.(css|js|jpg|png)$">
-        Header set Cache-Control "max-age=604800, public"
-    </FilesMatch>
 </IfModule>
